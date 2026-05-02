@@ -23,6 +23,7 @@ import TransactionMaintenance from '@/src/components/transactions/TransactionMai
 import TransactionReversal from '@/src/components/transactions/TransactionReversal';
 import { MENU_DATA } from '@/src/constants';
 import { Activity } from 'lucide-react';
+import { BankingProvider } from '@/src/context/BankingContext';
 import FinancialTransactionsInquiry from '@/src/components/transactions/FinancialTransactionsInquiry';
 import OfficeLedgerPrint from '@/src/components/reports/OfficeLedgerPrint';
 import ClearingMaintenance from '@/src/components/transactions/ClearingMaintenance';
@@ -411,6 +412,7 @@ export default function App() {
   };
 
   return (
+    <BankingProvider>
     <div 
       id="app-container"
       className="flex flex-col h-screen w-screen overflow-hidden bg-[#efefef] font-sans selection:bg-blue-100 selection:text-blue-900"
@@ -485,5 +487,6 @@ export default function App() {
         </main>
       </div>
     </div>
+    </BankingProvider>
   );
 }
