@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
+import { useBanking } from '@/src/context/BankingContext';
 
 type MaintenanceType = 
   | 'OPEN' 
@@ -42,19 +43,23 @@ const AccountMaintenance: React.FC<AccountMaintenanceProps> = ({
   initialType = 'OPEN', 
   initialMode = 'ADD' 
 }) => {
+  const { getAccount, createAccount, updateAccountStatus, getAccountsByCif } = useBanking();
   const [type, setType] = useState<MaintenanceType>(initialType);
   const [mode, setMode] = useState<'ADD' | 'MODIFY' | 'VERIFY' | 'INQUIRY'>(initialMode);
   const [accountNo, setAccountNo] = useState('');
   const [step, setStep] = useState<'CRITERIA' | 'DETAILS' | 'SUCCESS'>('CRITERIA');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [createdAccountId, setCreatedAccountId] = useState('');
   const [formData, setFormData] = useState({
-    accountName: 'ALEXANDER STERLING',
-    cifId: 'CIF-900827',
+    accountName: '',
+    cifId: '',
     schemeCode: 'SBBASIC',
     currency: 'USD',
     accountType: 'SAVINGS',
     status: 'ACTIVE'
   });
+  const [accountBalance, setAccountBalance] = useState<number | null>(null);
 
   const TYPE_CONFIG: Record<MaintenanceType, { label: string; icon: any; shortcut: string }> = {
     OPEN: { label: 'Savings Account Opening', icon: <UserPlus />, shortcut: 'HOAACSB' },
@@ -71,19 +76,74 @@ const AccountMaintenance: React.FC<AccountMaintenanceProps> = ({
   };
 
   const handleGo = () => {
+    setError('');
+    if (type === 'OPEN') {
+      // For new account opening, go straight to details form
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+        setStep('DETAILS');
+      }, 400);
+      return;
+    }
+
+    // For all other types, look up the account
+    if (!accountNo.trim()) {
+      setError('Please enter an account number');
+      return;
+    }
+
     setLoading(true);
     setTimeout(() => {
+      const account = getAccount(accountNo.trim());
+      if (!account) {
+        setError(`Account ${accountNo} not found in the system`);
+        setLoading(false);
+        return;
+      }
+      setFormData({
+        accountName: account.cifId,
+        cifId: account.cifId,
+        schemeCode: account.schemeCode,
+        currency: account.currency,
+        accountType: account.type,
+        status: account.status,
+      });
+      setAccountBalance(account.balance);
       setLoading(false);
       setStep('DETAILS');
-    }, 800);
+    }, 400);
   };
 
   const handleCommit = () => {
     setLoading(true);
+
+    if (type === 'OPEN') {
+      // Create a new account
+      const schemeNames: Record<string, string> = {
+        SBBASIC: 'SAVINGS BASIC', SBPREM: 'SAVINGS PREMIUM', SBSTAFF: 'STAFF SAVINGS',
+        CABSC: 'CURRENT BASIC', CACORP: 'CORPORATE CURRENT',
+      };
+      const account = createAccount({
+        cifId: formData.cifId,
+        type: formData.accountType as any,
+        currency: formData.currency,
+        schemeName: schemeNames[formData.schemeCode] || formData.schemeCode,
+        schemeCode: formData.schemeCode,
+        interestRate: formData.accountType === 'SAVINGS' ? 3.5 : 0,
+      });
+      setCreatedAccountId(account.id);
+    } else if (type === 'FREEZE' && accountNo) {
+      updateAccountStatus(accountNo.trim(), formData.status === 'FROZEN' ? 'ACTIVE' : 'FROZEN');
+    } else if (type === 'MODIFY' && accountNo) {
+      // status update
+      updateAccountStatus(accountNo.trim(), formData.status as any);
+    }
+
     setTimeout(() => {
       setLoading(false);
       setStep('SUCCESS');
-    }, 1200);
+    }, 600);
   };
 
   const renderSuccess = () => (
@@ -92,12 +152,19 @@ const AccountMaintenance: React.FC<AccountMaintenanceProps> = ({
         <CheckCircle2 size={40} className="text-emerald-600" />
       </div>
       <h3 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter mb-2">Transaction Committed</h3>
-      <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-8">Ref: AC-{Math.floor(Math.random() * 9999999)} | SOL 001</p>
+      <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">
+        {type === 'OPEN' && createdAccountId ? `New Account ID: ${createdAccountId}` : `Account: ${accountNo || 'N/A'}`}
+      </p>
+      <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-8">SOL 001 | {new Date().toLocaleDateString('en-GB').toUpperCase()}</p>
       <div className="flex gap-4">
         <button 
           onClick={() => {
             setStep('CRITERIA');
             setAccountNo('');
+            setError('');
+            setCreatedAccountId('');
+            setAccountBalance(null);
+            setFormData({ accountName: '', cifId: '', schemeCode: 'SBBASIC', currency: 'USD', accountType: 'SAVINGS', status: 'ACTIVE' });
           }}
           className="px-8 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded shadow-xl hover:bg-slate-800 transition-all"
         >
@@ -167,7 +234,14 @@ const AccountMaintenance: React.FC<AccountMaintenanceProps> = ({
            </div>
         </div>
 
-        <div className="mt-10 flex justify-end">
+        <div className="mt-10 flex justify-between items-center">
+           {error && (
+             <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-2">
+               <AlertCircle size={14} />
+               <span className="text-[10px] font-bold uppercase tracking-widest">{error}</span>
+             </div>
+           )}
+           {!error && <div />}
            <button 
              onClick={handleGo}
              className="px-10 py-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-indigo-600 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3"
