@@ -36,7 +36,22 @@ import InventoryManagement from '@/src/components/accounting/InventoryManagement
 import LoginInfo from '@/src/components/auth/LoginInfo';
 import DSAInquiry from '@/src/components/reports/DSAInquiry';
 import InterestAdjustmentRegister from '@/src/components/transactions/InterestAdjustmentRegister';
+import CIFCreation from '@/src/components/customer/CIFCreation';
 import AccountClosureMaintenance from '@/src/components/accounts/AccountClosureMaintenance';
+import ChequeBookIssue from '@/src/components/accounts/ChequeBookIssue';
+import BalanceConfirmationCert from '@/src/components/accounts/BalanceConfirmationCert';
+import GLMaintenance from '@/src/components/accounting/GLMaintenance';
+import GLProductLinking from '@/src/components/accounting/GLProductLinking';
+import GLTransactionInquiry from '@/src/components/accounting/GLTransactionInquiry';
+import RemittanceMaintenance from '@/src/components/accounting/RemittanceMaintenance';
+import RateMaintenance from '@/src/components/accounting/RateMaintenance';
+import InterestManager from '@/src/components/interest/InterestManager';
+import TermDepositManager from '@/src/components/accounts/TermDepositManager';
+import TopUpDepositManager from '@/src/components/accounts/TopUpDepositManager';
+import TaxManager from '@/src/components/compliance/TaxManager';
+import OverdraftManager from '@/src/components/accounts/OverdraftManager';
+import RTGSManager from '@/src/components/remittance/RTGSManager';
+import SWIFTManager from '@/src/components/remittance/SWIFTManager';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -120,6 +135,10 @@ export default function App() {
       case 'crm-360':
       case 'cust-detail':
         return <CustomerCRM />;
+      case 'cif-retail-sqde':
+        return <CIFCreation initialType="RETAIL" />;
+      case 'cif-corporate':
+        return <CIFCreation initialType="CORPORATE" />;
       case 'cust-search':
         return <CustomerSearch />;
       case 'prod-consumer':
@@ -131,6 +150,34 @@ export default function App() {
       case 'svc-limits':
         return <LimitsRegistry />;
       case 'acc-gl':
+      case 'gl-txn-inquiry':
+        return <GLTransactionInquiry />;
+      case 'gl-code-maint':
+        return <GLMaintenance mode="GL_CODE" />;
+      case 'gl-subhead-maint':
+        return <GLMaintenance mode="SUB_HEAD" />;
+      case 'gl-replicate':
+        return <GLMaintenance mode="REPLICATE" />;
+      case 'gl-product-link':
+        return <GLProductLinking />;
+      case 'rem-payment-order':
+        return <RemittanceMaintenance mode="PAYMENT_ORDER" />;
+      case 'rem-inward':
+        return <RemittanceMaintenance mode="INWARD" />;
+      case 'rate-code-maint':
+        return <RateMaintenance mode="RATE_CODE" />;
+      case 'rate-seq-maint':
+        return <RateMaintenance mode="RATE_SEQ" />;
+      case 'country-curr-maint':
+        return <RateMaintenance mode="COUNTRY_CURR" />;
+      case 'home-rate-list':
+        return <RateMaintenance mode="HOME_LIST" />;
+      case 'rate-history-inq':
+        return <RateMaintenance mode="HISTORY" />;
+      case 'print-rate-list':
+        return <RateMaintenance mode="HISTORY" />; // Reusing history for now as a placeholder for print list view
+      case 'rate-concession':
+        return <RateMaintenance mode="CONCESSION" />;
       case 'acc-mcy':
       case 'accounting':
         return <AccountingBackbone />;
@@ -179,6 +226,11 @@ export default function App() {
         return <InterestAdjustmentRegister />;
       case 'acc-closure':
         return <AccountClosureMaintenance />;
+      case 'chq-issue':
+      case 'acc-chq-issue':
+        return <ChequeBookIssue />;
+      case 'bal-cert':
+        return <BalanceConfirmationCert />;
       case 'acc-chq':
         return <ChequeStatusInquiry />;
       case 'acc-mis-td':
@@ -187,8 +239,6 @@ export default function App() {
         return <AccountMaintenance initialType="OPEN" initialMode="ADD" />;
       case 'acc-lien':
         return <AccountMaintenance initialType="LIEN" initialMode="MODIFY" />;
-      case 'acc-chq-issue':
-        return <AccountMaintenance initialType="CHEQUE_ISSUE" initialMode="ADD" />;
       case 'acc-freeze':
         return <AccountMaintenance initialType="FREEZE" initialMode="MODIFY" />;
       case 'acc-modify':
@@ -196,7 +246,116 @@ export default function App() {
       case 'acc-charges':
         return <AccountMaintenance initialType="CHARGES" initialMode="ADD" />;
       case 'acc-interest':
-        return <AccountMaintenance initialType="INTEREST" initialMode="MODIFY" />;
+      case 'int-acct-rate':
+        return <InterestManager mode="ACCT_RATE" />;
+      case 'int-table-maint':
+        return <InterestManager mode="TABLE_MAINT" />;
+      case 'int-slab-maint':
+        return <InterestManager mode="SLAB_MAINT" />;
+      case 'int-details-inq':
+        return <InterestManager mode="DETAILS_INQ" />;
+      case 'int-booking':
+        return <InterestManager mode="BOOKING" />;
+      case 'int-application':
+        return <InterestManager mode="APPLICATION" />;
+      case 'int-adj-maint':
+        return <InterestManager mode="ADJ_MAINT" />;
+      case 'int-calc-report':
+        return <InterestManager mode="CALC_REPORT" />;
+      case 'int-customer-report':
+        return <InterestManager mode="CUST_REPORT" />;
+      case 'int-change-advise':
+        return <InterestManager mode="ADV_ADVISE" />;
+      case 'td-opening':
+        return <TermDepositManager mode="OPENING" />;
+      case 'td-print-receipt':
+        return <TermDepositManager mode="PRINT" />;
+      case 'td-modification':
+        return <TermDepositManager mode="MOD" />;
+      case 'td-closure':
+        return <TermDepositManager mode="CLOSURE" />;
+      case 'td-renewal':
+        return <TermDepositManager mode="RENEWAL" />;
+      case 'td-acct-inquiry':
+        return <TermDepositManager mode="ACCT_INQ" />;
+      case 'td-cust-inquiry':
+        return <TermDepositManager mode="CUST_INQ" />;
+      case 'td-maturity-inquiry':
+        return <TermDepositManager mode="MAT_INQ" />;
+      case 'td-renewal-history':
+        return <TermDepositManager mode="REN_HIST" />;
+      case 'td-opening-closure-rpt':
+        return <TermDepositManager mode="REPORT_OPEN_CLOSE" />;
+      case 'td-general-rpt':
+        return <TermDepositManager mode="REPORT_GEN" />;
+      case 'td-maturity-dist-rpt':
+        return <TermDepositManager mode="REPORT_MAT_DIST" />;
+      case 'td-scheme-dist-rpt':
+        return <TermDepositManager mode="REPORT_SCHEME_DIST" />;
+      case 'td-rate-dist-rpt':
+        return <TermDepositManager mode="REPORT_RATE_DIST" />;
+      case 'tu-opening':
+        return <TopUpDepositManager mode="OPENING" />;
+      case 'tu-modification':
+        return <TopUpDepositManager mode="MOD" />;
+      case 'tu-verification':
+        return <TopUpDepositManager mode="VERIFY" />;
+      case 'tu-maint':
+        return <TopUpDepositManager mode="MAINT" />;
+      case 'tu-deposit-maint':
+        return <TopUpDepositManager mode="TXN_MAINT" />;
+      case 'tu-installment-inq':
+        return <TopUpDepositManager mode="INST_INQ" />;
+      case 'tu-acct-inquiry':
+        return <TopUpDepositManager mode="ACCT_INQ" />;
+      case 'tu-statement':
+        return <TopUpDepositManager mode="STATEMENT" />;
+      case 'od-opening':
+        return <OverdraftManager mode="OPENING" />;
+      case 'od-verification':
+        return <OverdraftManager mode="VERIFY" />;
+      case 'od-modification':
+        return <OverdraftManager mode="MOD" />;
+      case 'od-limit-maint':
+        return <OverdraftManager mode="LIMIT" />;
+      case 'tax-tds-refund':
+        return <TaxManager mode="TDS_REFUND" />;
+      case 'tax-withholding-remit':
+        return <TaxManager mode="WHT_REMIT" />;
+      case 'tax-remit-report':
+        return <TaxManager mode="REMIT_REPORT" />;
+      case 'tax-withholding-refund':
+        return <TaxManager mode="WHT_REFUND" />;
+      case 'tax-details-inq':
+        return <TaxManager mode="DETAILS_INQ" />;
+      case 'tax-projection':
+        return <TaxManager mode="PROJECTION" />;
+      case 'rtgs-msg-gen':
+        return <RTGSManager mode="MSG_GEN" />;
+      case 'rtgs-suspense':
+        return <RTGSManager mode="SUSPENSE" />;
+      case 'rtgs-inquiry':
+        return <RTGSManager mode="INQUIRY" />;
+      case 'rtgs-reports':
+        return <RTGSManager mode="REPORTS" />;
+      case 'swift-transfer':
+        return <SWIFTManager mode="TRANSFER" />;
+      case 'swift-inquiry':
+        return <SWIFTManager mode="INQUIRY" />;
+      case 'swift-modification':
+        return <SWIFTManager mode="MOD" />;
+      case 'swift-verification':
+        return <SWIFTManager mode="VERIFY" />;
+      case 'swift-generate':
+        return <SWIFTManager mode="GENERATE" />;
+      case 'swift-advice':
+        return <SWIFTManager mode="ADVICE" />;
+      case 'swift-inward-upload':
+        return <SWIFTManager mode="INWARD_UPLOAD" />;
+      case 'swift-outward-upload':
+        return <SWIFTManager mode="OUTWARD_UPLOAD" />;
+      case 'swift-reports':
+        return <SWIFTManager mode="REPORTS" />;
       case 'acc-bal-inq':
         return <AccountMaintenance initialType="BAL_INQ" initialMode="INQUIRY" />;
       case 'acc-chq-inq':

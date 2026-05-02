@@ -7,6 +7,10 @@ import {
   ShieldCheck, 
   FileText, 
   HelpCircle,
+  Database,
+  ArrowUpRight,
+  Globe,
+  TrendingDown,
   Search,
   ChevronDown,
   LayoutDashboard,
@@ -36,9 +40,13 @@ export const MENU_DATA: MenuItem[] = [
     icon: <Users size={18} />,
     children: [
       { id: 'cust-search', label: 'Entity Search', shortcut: 'CUS' },
+      { id: 'cif-retail-sqde', label: 'CIF Retail > New Entity > Customer SQDE', shortcut: 'SQDE' },
+      { id: 'cif-corporate', label: 'Corporate CIF', shortcut: 'CCIF' },
       { id: 'crm-origination', label: 'Origination & Sales', shortcut: 'CORS' },
       { id: 'crm-marketing', label: 'Marketing Campaigns', shortcut: 'MKT' },
       { id: 'crm-service', label: 'Service Requests', shortcut: 'SR' },
+      { id: 'chq-issue', label: 'Cheque Book Issue', shortcut: 'HICHBA' },
+      { id: 'bal-cert', label: 'Balance Confirmation Cert', shortcut: 'HGCHRG' },
       { id: 'crm-360', label: 'Customer 360 View', shortcut: 'C360' }
     ]
   },
@@ -71,8 +79,20 @@ export const MENU_DATA: MenuItem[] = [
     label: 'Accounting Backbone',
     icon: <ArrowRightLeft size={18} />,
     children: [
-      { id: 'acc-gl', label: 'General Ledger', shortcut: 'HGL' },
+      { id: 'acc-gl', label: 'General Ledger Inquiry', shortcut: 'HGL' },
+      { id: 'gl-code-maint', label: 'Reference Code Maintenance', shortcut: 'HRRCDM' },
+      { id: 'gl-subhead-maint', label: 'Create GL Sub Head', shortcut: 'HGLSHM' },
+      { id: 'gl-replicate', label: 'Replicate GL Sub Head', shortcut: 'HGLSHR' },
+      { id: 'gl-product-link', label: 'Link GL to Product', shortcut: 'HGSPM' },
+      { id: 'gl-txn-inquiry', label: 'GL Transaction Inquiry', shortcut: 'HIOGLT' },
       { id: 'acc-mcy', label: 'Multi-Currency Ops', shortcut: 'HMCY' },
+      { id: 'rate-code-maint', label: 'Rate Code Maintenance', shortcut: 'HMNTRTM' },
+      { id: 'rate-seq-maint', label: 'Rate Code Sequence Maint', shortcut: 'HMNTRTSQ' },
+      { id: 'country-curr-maint', label: 'Country Currency Maintenance', shortcut: 'HCNCM' },
+      { id: 'home-rate-list', label: 'Home Currency Rate List', shortcut: 'HMNTRTLH' },
+      { id: 'rate-history-inq', label: 'Rate History Inquiry', shortcut: 'HRTHQRY' },
+      { id: 'print-rate-list', label: 'Print Rate List', shortcut: 'HPRRTL' },
+      { id: 'rate-concession', label: 'Rate Concession Maintenance', shortcut: 'HCLERPM' },
       { id: 'txn-post', label: 'Transaction Manager', shortcut: 'HTM' },
       { id: 'txn-cash-dep', label: 'Cash Deposit', shortcut: 'HCASHDEP' },
       { id: 'txn-cash-wd', label: 'Cash Payment', shortcut: 'HCASHWD' },
@@ -104,6 +124,110 @@ export const MENU_DATA: MenuItem[] = [
     ]
   },
   {
+    id: 'interest-mgt',
+    label: 'Interest & Profit Management',
+    icon: <BarChart3 size={18} />,
+    children: [
+      { id: 'int-table-maint', label: 'Interest Table Maintenance', shortcut: 'HICTM' },
+      { id: 'int-slab-maint', label: 'Base Interest Slab Maint', shortcut: 'HBIVSM' },
+      { id: 'int-acct-rate', label: 'Account Interest Rate Maint', shortcut: 'HINTTM' },
+      { id: 'int-details-inq', label: 'Interest Details Inquiry', shortcut: 'HAITINQ' },
+      { id: 'int-booking', label: 'Interest Booking', shortcut: 'HACBOOK' },
+      { id: 'int-application', label: 'Interest Application', shortcut: 'HACINT' },
+      { id: 'int-adj-maint', label: 'Interest Adjustment Maint', shortcut: 'HIARM' },
+      { id: 'int-calc-report', label: 'Interest Calculation Report', shortcut: 'HAINTRPT' },
+      { id: 'int-customer-report', label: 'Customer Interest Report', shortcut: 'HCUIR' },
+      { id: 'int-change-advise', label: 'Interest Change Advise', shortcut: 'HINTADV' }
+    ]
+  },
+  {
+    id: 'term-deposits',
+    label: 'Term Deposit Management',
+    icon: <Database size={18} />,
+    children: [
+      { id: 'td-opening', label: 'Term Deposit Account Opening', shortcut: 'HOAACTD' },
+      { id: 'td-print-receipt', label: 'Print TD Receipt', shortcut: 'HDRP' },
+      { id: 'td-modification', label: 'Term Deposit Modification', shortcut: 'HACMTD' },
+      { id: 'td-closure', label: 'Term Deposit Closure', shortcut: 'HCAACTD' },
+      { id: 'td-renewal', label: 'Term Deposit Renewal', shortcut: 'HDTREN' },
+      { id: 'td-acct-inquiry', label: 'TD Account Inquiry', shortcut: 'HACTID' },
+      { id: 'td-cust-inquiry', label: 'Customer TD Inquiry', shortcut: 'HCUTD' },
+      { id: 'td-maturity-inquiry', label: 'TD Maturity Inquiry', shortcut: 'HCUTDMAT' },
+      { id: 'td-renewal-history', label: 'TD Renewal History', shortcut: 'HRELACI' },
+      { id: 'td-opening-closure-rpt', label: 'FD Opening/Closure Report', shortcut: 'HFDOCD' },
+      { id: 'td-general-rpt', label: 'General Deposit Details Rpt', shortcut: 'HGDET' },
+      { id: 'td-maturity-dist-rpt', label: 'Maturity Distribution Rpt', shortcut: 'HMDD' },
+      { id: 'td-scheme-dist-rpt', label: 'Scheme Distribution Rpt', shortcut: 'HSDD' },
+      { id: 'td-rate-dist-rpt', label: 'Rate Distribution Rpt', shortcut: 'HRDD' }
+    ]
+  },
+  {
+    id: 'top-up-deposits',
+    label: 'Top Up Deposit Management',
+    icon: <ArrowUpRight size={18} />,
+    children: [
+      { id: 'tu-opening', label: 'Top Up Account Opening', shortcut: 'HOAACTU' },
+      { id: 'tu-modification', label: 'Pre-Verify Modification', shortcut: 'HOAACMTU' },
+      { id: 'tu-verification', label: 'Account Verification', shortcut: 'HOAACVTU' },
+      { id: 'tu-maint', label: 'Maintenance (Renewal/Closure)', shortcut: 'HACMFTU' },
+      { id: 'tu-deposit-maint', label: 'Top Up / Adhoc Deposit', shortcut: 'HTUTM' },
+      { id: 'tu-installment-inq', label: 'Installment Inquiry', shortcut: 'HTUINST' },
+      { id: 'tu-acct-inquiry', label: 'Top Up Account Inquiry', shortcut: 'HACITD' },
+      { id: 'tu-statement', label: 'Generate A/C Statement', shortcut: 'HPSP' }
+    ]
+  },
+  {
+    id: 'overdraft-mgt',
+    label: 'Overdraft Management',
+    icon: <TrendingDown size={18} />,
+    children: [
+      { id: 'od-opening', label: 'Overdraft Account Opening', shortcut: 'HOAACOD' },
+      { id: 'od-verification', label: 'Account Verification', shortcut: 'HOAACVOD' },
+      { id: 'od-modification', label: 'Account Modification', shortcut: 'HACM' },
+      { id: 'od-limit-maint', label: 'Sanction Limit Maint', shortcut: 'HACLHM' }
+    ]
+  },
+  {
+    id: 'swift-mgt',
+    label: 'SWIFT Payment Systems',
+    icon: <Globe size={18} />,
+    children: [
+      { id: 'swift-transfer', label: 'SWIFT Payment Transfer', shortcut: 'HPORDM' },
+      { id: 'swift-inquiry', label: 'Message Inquiry', shortcut: 'HSMI' },
+      { id: 'swift-modification', label: 'Modify SWIFT Messages', shortcut: 'HSMM' },
+      { id: 'swift-verification', label: 'Verify SWIFT Messages', shortcut: 'HSMV' },
+      { id: 'swift-generate', label: 'Generate SWIFT Messages', shortcut: 'HSMG' },
+      { id: 'swift-advice', label: 'Generate SWIFT Advice', shortcut: 'HSAG' },
+      { id: 'swift-inward-upload', label: 'Inward Message Upload', shortcut: 'HUPLPMSG' },
+      { id: 'swift-outward-upload', label: 'Outward Message Upload', shortcut: 'HPSTTUM' },
+      { id: 'swift-reports', label: 'Monitoring Reports', shortcut: 'HPOMR' }
+    ]
+  },
+  {
+    id: 'rtgs-mgt',
+    label: 'RTGS Payment Systems',
+    icon: <ArrowRightLeft size={18} />,
+    children: [
+      { id: 'rtgs-msg-gen', label: 'Generate RTGS Messages', shortcut: 'HPORDM' },
+      { id: 'rtgs-suspense', label: 'Inward Suspense Processing', shortcut: 'HRISP' },
+      { id: 'rtgs-inquiry', label: 'Message Inquiry (In/Out)', shortcut: 'HSMI' },
+      { id: 'rtgs-reports', label: 'RTGS Payment Reports', shortcut: 'HPOMR' }
+    ]
+  },
+  {
+    id: 'compliance-mgt',
+    label: 'Tax & Compliance',
+    icon: <ShieldCheck size={18} />,
+    children: [
+      { id: 'tax-tds-refund', label: 'TDS Refund Maintenance', shortcut: 'HRFTDS' },
+      { id: 'tax-withholding-remit', label: 'Remit Withholding Tax', shortcut: 'RMWTAX' },
+      { id: 'tax-remit-report', label: 'TDS Remittance Report', shortcut: 'HRMTDS' },
+      { id: 'tax-withholding-refund', label: 'Refund Withholding Tax', shortcut: 'RFWTAX' },
+      { id: 'tax-details-inq', label: 'Inquire & Print Tax Details', shortcut: 'HTDSIP' },
+      { id: 'tax-projection', label: 'Tax Projection Inquiry', shortcut: 'HTDSPROJ' }
+    ]
+  },
+  {
     id: 'inventory-mgt',
     label: 'Inventory Management',
     icon: <Package size={18} />,
@@ -115,6 +239,15 @@ export const MENU_DATA: MenuItem[] = [
       { id: 'inv-inq', label: 'Inventory Inquiry', shortcut: 'HIIA' },
       { id: 'inv-move-rep', label: 'Movement Report', shortcut: 'HIMR' },
       { id: 'inv-status-rep', label: 'Status Report', shortcut: 'HISR' }
+    ]
+  },
+  {
+    id: 'remittance',
+    label: 'Remittance & Payments',
+    icon: <ArrowRightLeft size={18} />,
+    children: [
+      { id: 'rem-payment-order', label: 'Payment Order Maintenance', shortcut: 'HPORDM' },
+      { id: 'rem-inward', label: 'Inward Remittance Maintenance', shortcut: 'HIRM' }
     ]
   },
   {
@@ -136,7 +269,7 @@ export const MENU_DATA: MenuItem[] = [
       { id: 'res-interest', label: 'Interest & Tax Engine' },
       { id: 'res-rates', label: 'Exchange Rates Master' },
       { id: 'res-fees', label: 'Fees & Charges' },
-      { id: 'res-sig', label: 'Signature Verification' }
+      { id: 'sig-inquiry', label: 'Signature Verification (SVS)', shortcut: 'SVS' }
     ]
   }
 ];

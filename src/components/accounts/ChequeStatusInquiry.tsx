@@ -9,7 +9,8 @@ export default function ChequeStatusInquiry() {
     chqAlpha: '',
     fromChqNo: '',
     toChqNo: '',
-    status: 'All'
+    status: 'All',
+    chqBookStatus: 'Issued'
   });
 
   const [results, setResults] = useState<any[]>([]);
@@ -92,6 +93,7 @@ export default function ChequeStatusInquiry() {
                 {renderField('From Cheque No.', 'fromChqNo')}
                 {renderField('To Cheque No.', 'toChqNo')}
                 {renderField('Status', 'status', 'select', false, ['All', 'Used', 'Unused', 'Stopped', 'Destroyed', 'Dishonoured'])}
+                {renderField('Chq Book Status', 'chqBookStatus', 'select', false, ['Issued', 'Returned', 'Stopped'])}
               </div>
             </div>
 
@@ -118,8 +120,16 @@ export default function ChequeStatusInquiry() {
                       <span className="font-bold text-slate-800">MR. ADARSH KUMAR</span>
                    </div>
                    <div className="flex flex-col border-l border-slate-200 pl-4">
-                      <span className="text-slate-500 font-bold uppercase tracking-tighter">Status</span>
+                      <span className="text-slate-500 font-bold uppercase tracking-tighter">A/c Status</span>
                       <span className="text-green-700 font-bold">Active</span>
+                   </div>
+                   <div className="flex flex-col border-l border-slate-200 pl-4">
+                      <span className="text-slate-500 font-bold uppercase tracking-tighter">Cheque Book Status</span>
+                      <span className={`font-bold ${
+                        formData.chqBookStatus === 'Issued' ? 'text-blue-600' :
+                        formData.chqBookStatus === 'Returned' ? 'text-amber-600' :
+                        'text-red-600'
+                      }`}>{formData.chqBookStatus}</span>
                    </div>
                 </div>
                 <button 

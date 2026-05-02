@@ -47,6 +47,14 @@ const AccountMaintenance: React.FC<AccountMaintenanceProps> = ({
   const [accountNo, setAccountNo] = useState('');
   const [step, setStep] = useState<'CRITERIA' | 'DETAILS' | 'SUCCESS'>('CRITERIA');
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    accountName: 'ALEXANDER STERLING',
+    cifId: 'CIF-900827',
+    schemeCode: 'SBBASIC',
+    currency: 'USD',
+    accountType: 'SAVINGS',
+    status: 'ACTIVE'
+  });
 
   const TYPE_CONFIG: Record<MaintenanceType, { label: string; icon: any; shortcut: string }> = {
     OPEN: { label: 'Savings Account Opening', icon: <UserPlus />, shortcut: 'HOAACSB' },
@@ -214,26 +222,75 @@ const AccountMaintenance: React.FC<AccountMaintenanceProps> = ({
                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
                         <Info size={12} /> Primary Information Header
                      </h4>
-                     <div className="grid grid-cols-2 gap-6">
+                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="flex flex-col gap-1.5">
                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Account Name / Title</label>
-                           <input type="text" defaultValue="ALEXANDER STERLING" className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition-all" />
+                           <input 
+                             type="text" 
+                             value={formData.accountName} 
+                             onChange={(e) => setFormData({...formData, accountName: e.target.value})}
+                             className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition-all" 
+                           />
                         </div>
                         <div className="flex flex-col gap-1.5">
                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Customer ID (CIF)</label>
-                           <input type="text" defaultValue="CIF-900827" className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-mono font-black text-slate-800 outline-none focus:border-indigo-500 transition-all" />
+                           <input 
+                             type="text" 
+                             value={formData.cifId} 
+                             onChange={(e) => setFormData({...formData, cifId: e.target.value})}
+                             className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-mono font-black text-slate-800 outline-none focus:border-indigo-500 transition-all" 
+                           />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Account Type</label>
+                           <select 
+                             value={formData.accountType}
+                             onChange={(e) => setFormData({...formData, accountType: e.target.value})}
+                             className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition-all"
+                           >
+                              <option value="SAVINGS">SAVINGS ACCOUNT</option>
+                              <option value="CURRENT">CURRENT ACCOUNT</option>
+                              <option value="LOAN">LOAN ACCOUNT</option>
+                              <option value="TERM_DEPOSIT">TERM DEPOSIT</option>
+                           </select>
                         </div>
                         <div className="flex flex-col gap-1.5">
                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Scheme Code</label>
-                           <select className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition-all">
-                              <option>SBBASIC - SAVINGS BASIC</option>
-                              <option>SBPREM - SAVINGS PREMIUM</option>
-                              <option>SBSTAFF - STAFF SAVINGS</option>
+                           <select 
+                             value={formData.schemeCode}
+                             onChange={(e) => setFormData({...formData, schemeCode: e.target.value})}
+                             className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition-all"
+                           >
+                              <option value="SBBASIC">SBBASIC - SAVINGS BASIC</option>
+                              <option value="SBPREM">SBPREM - SAVINGS PREMIUM</option>
+                              <option value="SBSTAFF">SBSTAFF - STAFF SAVINGS</option>
                            </select>
                         </div>
                         <div className="flex flex-col gap-1.5">
                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Currency Code</label>
-                           <input type="text" defaultValue="USD" className="bg-slate-100 border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-400 outline-none" readOnly />
+                           <select 
+                             value={formData.currency}
+                             onChange={(e) => setFormData({...formData, currency: e.target.value})}
+                             className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition-all"
+                           >
+                              <option value="USD">USD - US DOLLAR</option>
+                              <option value="INR">INR - INDIAN RUPEE</option>
+                              <option value="EUR">EUR - EURO</option>
+                              <option value="GBP">GBP - BRITISH POUND</option>
+                           </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Account Status</label>
+                           <select 
+                             value={formData.status}
+                             onChange={(e) => setFormData({...formData, status: e.target.value})}
+                             className="bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition-all"
+                           >
+                              <option value="ACTIVE">ACTIVE</option>
+                              <option value="DORMANT">DORMANT</option>
+                              <option value="INACTIVE">INACTIVE</option>
+                              <option value="CLOSED">CLOSED</option>
+                           </select>
                         </div>
                      </div>
                   </div>
@@ -295,12 +352,14 @@ const AccountMaintenance: React.FC<AccountMaintenanceProps> = ({
                      <h5 className="text-[9px] font-black text-indigo-900 uppercase tracking-widest mb-4">Account Snapshot</h5>
                      <div className="space-y-4">
                         <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
-                           <span className="text-[9px] font-bold text-indigo-400 uppercase">Available</span>
-                           <span className="text-sm font-black text-indigo-900 font-mono italic">$450,230.00</span>
+                           <span className="text-[9px] font-bold text-indigo-400 uppercase">Currency</span>
+                           <span className="text-sm font-black text-indigo-900 font-mono italic">{formData.currency}</span>
                         </div>
                         <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
                            <span className="text-[9px] font-bold text-indigo-400 uppercase">Status</span>
-                           <span className="px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-black rounded uppercase">Active</span>
+                           <span className={`px-2 py-0.5 ${formData.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-rose-500'} text-white text-[8px] font-black rounded uppercase transition-colors`}>
+                              {formData.status}
+                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                            <span className="text-[9px] font-bold text-indigo-400 uppercase">Linked Cards</span>
