@@ -23,7 +23,6 @@ import TransactionMaintenance from '@/src/components/transactions/TransactionMai
 import TransactionReversal from '@/src/components/transactions/TransactionReversal';
 import { MENU_DATA } from '@/src/constants';
 import { Activity } from 'lucide-react';
-import { BankingProvider } from '@/src/context/BankingContext';
 import FinancialTransactionsInquiry from '@/src/components/transactions/FinancialTransactionsInquiry';
 import OfficeLedgerPrint from '@/src/components/reports/OfficeLedgerPrint';
 import ClearingMaintenance from '@/src/components/transactions/ClearingMaintenance';
@@ -53,6 +52,8 @@ import TaxManager from '@/src/components/compliance/TaxManager';
 import OverdraftManager from '@/src/components/accounts/OverdraftManager';
 import RTGSManager from '@/src/components/remittance/RTGSManager';
 import SWIFTManager from '@/src/components/remittance/SWIFTManager';
+import LoanManager from '@/src/components/loans/LoanManager';
+import TransactionManager from '@/src/components/transactions/TransactionManager';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -80,7 +81,16 @@ export default function App() {
     };
 
     window.addEventListener('nav-to-customer', handleNav);
-    return () => window.removeEventListener('nav-to-customer', handleNav);
+    
+    const handleMenuNav = (e: any) => {
+      setActiveMenuId(e.detail);
+    };
+    window.addEventListener('nav-to-menu', handleMenuNav);
+
+    return () => {
+      window.removeEventListener('nav-to-customer', handleNav);
+      window.removeEventListener('nav-to-menu', handleMenuNav);
+    };
   }, []);
 
   // Handle Finacle Shortcuts
@@ -183,6 +193,7 @@ export default function App() {
       case 'accounting':
         return <AccountingBackbone />;
       case 'txn-post':
+      case 'txn-maintenance':
         return <TransactionPosting />;
       case 'txn-cash-dep':
         return <TransactionPosting defaultType="CASH DEPOSIT" />;
@@ -194,8 +205,9 @@ export default function App() {
         return <TransactionPosting mode="VERIFY" />;
       case 'txn-inquiry-id':
       case 'txn-inquiry-fin':
-      case 'txn-inquiry':
         return <FinancialTransactionsInquiry />;
+      case 'txn-inquiry':
+        return <TransactionManager mode="INQUIRY" />;
       case 'txn-reversal':
         return <TransactionReversal />;
       case 'txn-report':
@@ -212,6 +224,7 @@ export default function App() {
       case 'roadmap':
         return <Roadmap />;
       case 'txn-clearing':
+      case 'svc-clearing':
         return <ClearingMaintenance />;
       case 'txn-memo':
         return <MemoPadLookup />;
@@ -319,6 +332,54 @@ export default function App() {
         return <OverdraftManager mode="MOD" />;
       case 'od-limit-maint':
         return <OverdraftManager mode="LIMIT" />;
+      case 'loan-opening':
+        return <LoanManager mode="OPENING" />;
+      case 'loan-modification':
+        return <LoanManager mode="MOD" />;
+      case 'loan-verification':
+        return <LoanManager mode="VERIFY" />;
+      case 'loan-disbursement':
+        return <LoanManager mode="DISBURSE" />;
+      case 'loan-demand-gen':
+        return <LoanManager mode="DEMAND_GEN" />;
+      case 'loan-scheduled-pay':
+        return <LoanManager mode="SCHED_PAY" />;
+      case 'loan-demand-satisfaction':
+        return <LoanManager mode="DEMAND_SAT" />;
+      case 'loan-unscheduled-pay':
+        return <LoanManager mode="UNSCHED_PAY" />;
+      case 'loan-reschedule':
+        return <LoanManager mode="RESCHEDULE" />;
+      case 'loan-int-maint':
+        return <LoanManager mode="INT_MAINT" />;
+      case 'loan-fee-maint':
+        return <LoanManager mode="FEE_MAINT" />;
+      case 'loan-fee-waive':
+        return <LoanManager mode="FEE_WAIVE" />;
+      case 'loan-payoff-inq':
+        return <LoanManager mode="PAYOFF_INQ" />;
+      case 'loan-txn-inq':
+        return <LoanManager mode="TXN_INQ" />;
+      case 'loan-ledger-inq':
+        return <LoanManager mode="LEDGER_INQ" />;
+      case 'loan-fee-inq':
+        return <LoanManager mode="FEE_INQ" />;
+      case 'loan-pay-history':
+        return <LoanManager mode="PAY_HIST" />;
+      case 'loan-prepay-history':
+        return <LoanManager mode="PREPAY_HIST" />;
+      case 'loan-sched-inq':
+        return <LoanManager mode="SCHED_INQ" />;
+      case 'loan-doc-report':
+        return <LoanManager mode="DOC_REPORT" />;
+      case 'loan-gen-inq':
+        return <LoanManager mode="GEN_INQ" />;
+      case 'loan-gen-detail-inq':
+        return <LoanManager mode="GEN_DETAIL_INQ" />;
+      case 'loan-charges-inq':
+        return <LoanManager mode="CHARGES_INQ" />;
+      case 'loan-statement':
+        return <LoanManager mode="STATEMENT" />;
       case 'tax-tds-refund':
         return <TaxManager mode="TDS_REFUND" />;
       case 'tax-withholding-remit':
@@ -412,7 +473,6 @@ export default function App() {
   };
 
   return (
-    <BankingProvider>
     <div 
       id="app-container"
       className="flex flex-col h-screen w-screen overflow-hidden bg-[#efefef] font-sans selection:bg-blue-100 selection:text-blue-900"
@@ -487,6 +547,5 @@ export default function App() {
         </main>
       </div>
     </div>
-    </BankingProvider>
   );
 }

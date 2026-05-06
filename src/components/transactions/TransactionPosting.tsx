@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { fetchTransactions, createTransaction, Transaction } from '../../services/api';
 import { 
   ArrowRightLeft, 
   Plus, 
@@ -11,7 +12,8 @@ import {
   Calculator,
   Search,
   Settings,
-  FileText
+  FileText,
+  RotateCcw
 } from 'lucide-react';
 
 interface TransactionLeg {
@@ -68,12 +70,12 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
   const [searchTxnId, setSearchTxnId] = useState('');
   const [inquiryResult, setInquiryResult] = useState<any | null>(null);
 
-  const COMMAND_MAP: Record<string, { type: string, op: 'POST' | 'INQUIRY' | 'REVERSAL' | 'FIN_INQUIRY' }> = {
+  const COMMAND_MAP: Record<string, { type: string, op: 'POST' | 'INQUIRY' | 'REVERSAL' | 'FIN_INQUIRY', menuId?: string }> = {
     'HTM': { type: 'JOURNAL TRANSFER (T/T)', op: 'POST' },
     'HCASHDEP': { type: 'CASH DEPOSIT', op: 'POST' },
     'HCASHWD': { type: 'CASH PAYMENT', op: 'POST' },
     'HXFER': { type: 'TRANSFER', op: 'POST' },
-    'HCRT': { type: 'REVERSAL', op: 'REVERSAL' },
+    'HCRT': { type: 'REVERSAL', op: 'REVERSAL', menuId: 'txn-reversal' },
     'HTI': { type: 'INQUIRY', op: 'INQUIRY' },
     'HFTI': { type: 'FINANCIAL INQUIRY', op: 'FIN_INQUIRY' }
   };
@@ -82,7 +84,11 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
     const cmd = jumpCommand.toUpperCase().trim();
     if (COMMAND_MAP[cmd]) {
       const target = COMMAND_MAP[cmd];
-      if (target.op === 'POST') setEntryType(target.type);
+      if (target.menuId) {
+        window.dispatchEvent(new CustomEvent('nav-to-menu', { detail: target.menuId }));
+        return;
+      }
+      if (target.op === 'POST') handleTypeChange(target.type);
       setTxnOperation(target.op);
       setJumpCommand('');
     } else {
@@ -91,22 +97,46 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
     }
   };
 
-  React.useEffect(() => {
-    if (entryType === 'CASH DEPOSIT') {
-       // Pre-populate with typical Cash-in-Vault GL for Debit if empty
-       setLegs(prev => prev.map((leg, i) => {
-         if (i === 0 && !leg.accountNo) return { ...leg, accountNo: '11001-VAL', particulars: 'CASH DEPOSIT BY CUSTOMER' };
-         if (i === 1 && !leg.particulars) return { ...leg, particulars: 'CREDIT BY CASH' };
-         return leg;
-       }));
-    } else if (entryType === 'CASH PAYMENT') {
-       setLegs(prev => prev.map((leg, i) => {
-         if (i === 0 && !leg.particulars) return { ...leg, particulars: 'DEBIT FOR CASH WITHDRAWAL' };
-         if (i === 1 && !leg.accountNo) return { ...leg, accountNo: '11001-VAL', particulars: 'CASH PAYMENT TO CUSTOMER' };
-         return leg;
-       }));
+  const TRANS_TYPES = [
+    { code: 'HTM', type: 'JOURNAL TRANSFER (T/T)', label: 'HTM - JOURNAL TRANSFER (T/T)' },
+    { code: 'HCASHDEP', type: 'CASH DEPOSIT', label: 'HCASHDEP - CASH DEPOSIT (C/D)' },
+    { code: 'HCASHWD', type: 'CASH PAYMENT', label: 'HCASHWD - CASH WITHDRAWAL (C/P)' },
+    { code: 'HXFER', type: 'TRANSFER', label: 'HXFER - INTER-BANK TRANSFER' },
+    { code: 'HCLRM', type: 'CLEARING (C/L)', label: 'HCLRM - CLEARING MAINTENANCE' }
+  ];
+
+  const handleTypeChange = (typeStr: string) => {
+    setEntryType(typeStr);
+    
+    // Explicit reset/pre-fill logic for legs on type change
+    if (typeStr === 'CASH DEPOSIT') {
+      setLegs([
+        { id: '1', accountNo: '11001-VAL', type: 'DEBIT', amount: '', currency: 'USD', cashCurrency: 'USD', cashAmount: '', exchangeRate: '1.00', particulars: 'CASH DEPOSIT BY CUSTOMER', denominations: [{ unit: 100, count: '' }, { unit: 50, count: '' }, { unit: 20, count: '' }, { unit: 10, count: '' }, { unit: 5, count: '' }, { unit: 1, count: '' }] },
+        { id: '2', accountNo: '', type: 'CREDIT', amount: '', currency: 'USD', particulars: 'CREDIT BY CASH' }
+      ]);
+    } else if (typeStr === 'CASH PAYMENT') {
+      setLegs([
+        { id: '1', accountNo: '', type: 'DEBIT', amount: '', currency: 'USD', particulars: 'DEBIT FOR CASH WITHDRAWAL' },
+        { id: '2', accountNo: '11001-VAL', type: 'CREDIT', amount: '', currency: 'USD', cashCurrency: 'USD', cashAmount: '', exchangeRate: '1.00', particulars: 'CASH PAYMENT TO CUSTOMER', denominations: [{ unit: 100, count: '' }, { unit: 50, count: '' }, { unit: 20, count: '' }, { unit: 10, count: '' }, { unit: 5, count: '' }, { unit: 1, count: '' }] }
+      ]);
+    } else if (typeStr === 'TRANSFER') {
+      setLegs([
+        { id: '1', accountNo: '', type: 'DEBIT', amount: '', currency: 'USD', particulars: 'TRANSFER FROM CUSTOMER' },
+        { id: '2', accountNo: '', type: 'CREDIT', amount: '', currency: 'USD', particulars: 'TRANSFER TO BENEFICIARY' }
+      ]);
+    } else {
+      setLegs([
+        { id: '1', accountNo: '', type: 'DEBIT', amount: '', currency: 'USD', particulars: '' },
+        { id: '2', accountNo: '', type: 'CREDIT', amount: '', currency: 'USD', particulars: '' }
+      ]);
     }
-  }, [entryType]);
+  };
+
+  React.useEffect(() => {
+    if (defaultType) {
+      handleTypeChange(defaultType);
+    }
+  }, []);
 
   const [batches, setBatches] = useState([
     { id: 'B-99012', entries: 4, amount: 57045.50, status: 'OPEN' as const },
@@ -138,8 +168,16 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
     { id: '2', accountNo: '', type: 'CREDIT', amount: '', currency: 'USD', cashCurrency: 'USD', cashAmount: '', exchangeRate: '1.00', particulars: '', instrumentNo: '', instrumentDate: '', signatureVerified: false, denominations: [{ unit: 100, count: '' }, { unit: 50, count: '' }, { unit: 20, count: '' }, { unit: 10, count: '' }, { unit: 5, count: '' }, { unit: 1, count: '' }] }
   ]);
 
-  const [txnDate, setTxnDate] = useState(new Date().toISOString().split('T')[0]);
-  const todayStr = new Date().toISOString().split('T')[0];
+  const getTodayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+  };
+
+  const [txnId, setTxnId] = useState('');
+  const [refNo, setRefNo] = useState('');
+  const [postingDate, setPostingDate] = useState(getTodayStr());
+  const [txnDate, setTxnDate] = useState(getTodayStr());
+  const todayStr = getTodayStr();
   const isDateInPast = txnDate < todayStr;
   const isDateInFuture = txnDate > todayStr;
   const isDateInvalid = isDateInPast || isDateInFuture;
@@ -165,6 +203,24 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
 
   const [userDailyUtilization, setUserDailyUtilization] = useState(145000); // Mock data
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const [apiTransactions, setApiTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastPostedTxnId, setLastPostedTxnId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadTransactions = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchTransactions();
+        setApiTransactions(data);
+      } catch (err) {
+        console.error('Error fetching transactions:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadTransactions();
+  }, [txnMode]);
 
   const addLeg = () => {
     setLegs([...legs, { 
@@ -195,7 +251,9 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
   };
 
   const updateLeg = (id: string, field: keyof TransactionLeg, value: string) => {
-    if (field === 'amount') {
+    if (field === 'amount' || field === 'cashAmount') {
+      // Prevent negative signs and ensure only valid positive decimals
+      if (value !== '' && !/^\d*\.?\d*$/.test(value)) return;
       setDismissedAlerts(new Set()); // Reset dismissals on any amount change
     }
     
@@ -265,7 +323,10 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
       { id: '1', accountNo: '', type: 'DEBIT', amount: '', currency: 'USD', cashCurrency: 'USD', cashAmount: '', exchangeRate: '1.00', particulars: '', instrumentNo: '', instrumentDate: '', signatureVerified: false, denominations: [{ unit: 100, count: '' }, { unit: 50, count: '' }, { unit: 20, count: '' }, { unit: 10, count: '' }, { unit: 5, count: '' }, { unit: 1, count: '' }] },
       { id: '2', accountNo: '', type: 'CREDIT', amount: '', currency: 'USD', cashCurrency: 'USD', cashAmount: '', exchangeRate: '1.00', particulars: '', instrumentNo: '', instrumentDate: '', signatureVerified: false, denominations: [{ unit: 100, count: '' }, { unit: 50, count: '' }, { unit: 20, count: '' }, { unit: 10, count: '' }, { unit: 5, count: '' }, { unit: 1, count: '' }] }
     ]);
-    setTxnDate(new Date().toISOString().split('T')[0]);
+    setTxnId('');
+    setRefNo('');
+    setPostingDate(getTodayStr());
+    setTxnDate(getTodayStr());
     setPostingStep('DETAILS');
   };
 
@@ -283,7 +344,11 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
               key={cmd}
               onClick={() => {
                 const target = COMMAND_MAP[cmd];
-                if (target.op === 'POST') setEntryType(target.type);
+                if (target.menuId) {
+                  window.dispatchEvent(new CustomEvent('nav-to-menu', { detail: target.menuId }));
+                  return;
+                }
+                if (target.op === 'POST') handleTypeChange(target.type);
                 setTxnOperation(target.op);
               }}
               className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -331,6 +396,13 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
             className={`px-4 py-2 text-[11px] font-bold rounded uppercase tracking-widest transition-all ${txnMode === 'ENTRY' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
           >
             New Posting
+          </button>
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('nav-to-menu', { detail: 'txn-reversal' }))}
+            className="px-4 py-2 text-[11px] font-bold rounded uppercase tracking-widest transition-all bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 flex items-center gap-2"
+          >
+            <RotateCcw size={14} />
+            Reversal (HCRT)
           </button>
         </div>
       </header>
@@ -539,19 +611,18 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
                 </div>
               </div>
               
-              <div className="p-6 grid grid-cols-1 md:grid-cols-5 gap-6 bg-white">
+              <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6 bg-white">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Entry Type</label>
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Transaction Code / Type</label>
                   <select 
                     value={entryType}
-                    onChange={(e) => setEntryType(e.target.value)}
+                    onChange={(e) => handleTypeChange(e.target.value)}
                     className="bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs font-bold focus:ring-1 focus:ring-blue-500 outline-none"
                   >
-                    <option value="JOURNAL TRANSFER (T/T)">JOURNAL TRANSFER (T/T)</option>
-                    <option value="CLEARING (C/L)">CLEARING (C/L)</option>
-                    <option value="CASH DEPOSIT">CASH DEPOSIT (C/D)</option>
-                    <option value="CASH PAYMENT">CASH PAYMENT (C/P)</option>
-                    <option value="TRANSFER">INTER-BANK TRANSFER (HXFER)</option>
+                    {TRANS_TYPES.map(t => (
+                      <option key={t.code} value={t.type}>{t.label}</option>
+                    ))}
+                    <option value="MULTI">CUSTOM MULTI-LEG</option>
                   </select>
                 </div>
                 {entryType === 'TRANSFER' && (
@@ -574,6 +645,36 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
                   </div>
                 )}
                 <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Transaction ID <span className="text-red-500 font-black">*</span></label>
+                  <input 
+                    type="text" 
+                    required
+                    value={txnId}
+                    onChange={(e) => setTxnId(e.target.value)}
+                    placeholder="Enter TXN ID" 
+                    className="bg-slate-100 border border-slate-200 rounded px-2 py-1.5 text-xs font-mono font-bold focus:ring-1 focus:ring-blue-500 outline-none" 
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Reference Number</label>
+                  <input 
+                    type="text" 
+                    value={refNo}
+                    onChange={(e) => setRefNo(e.target.value)}
+                    placeholder="Ref # (Optional)" 
+                    className="bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" 
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Posting Date</label>
+                  <input 
+                    type="date" 
+                    value={postingDate}
+                    onChange={(e) => setPostingDate(e.target.value)}
+                    className="bg-blue-50 border border-blue-100 rounded px-2 py-1.5 text-xs font-mono text-blue-800 focus:ring-1 focus:ring-blue-500 outline-none" 
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Value Date</label>
                    <input 
                     type="date" 
@@ -586,10 +687,6 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
                       {isDateInPast ? 'Back-dating not allowed' : 'Future-dating not allowed'}
                     </span>
                   )}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ref Number</label>
-                  <input type="text" placeholder="TXN-XXXX-XXXX" className="bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" />
                 </div>
                 <div className="col-span-2 flex flex-col gap-1.5">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Transaction Description</label>
@@ -981,11 +1078,11 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
                     Reset Form
                   </button>
                   <button 
-                    disabled={!isBalanced || legs.some(l => !l.accountNo || !l.amount) || hasCriticalViolation || isDateInvalid}
+                    disabled={!isBalanced || legs.some(l => !l.accountNo || !(parseFloat(l.amount) > 0)) || hasCriticalViolation || isDateInvalid}
                     onClick={() => setPostingStep('REVIEW')}
                     className="px-10 py-2.5 bg-blue-600 shadow-lg shadow-blue-500/20 text-white text-[10px] font-black rounded hover:bg-blue-700 transition-all active:scale-95 uppercase tracking-widest flex items-center gap-2.5 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                   >
-                    {isDateInvalid ? 'Invalid Date' : hasCriticalViolation ? 'Limit Exceeded' : 'Review Posting'}
+                    {isDateInvalid ? 'Invalid Date' : hasCriticalViolation ? 'Limit Exceeded' : legs.some(l => parseFloat(l.amount) <= 0) ? 'Invalid Amount' : 'Review Posting'}
                     <ChevronRight size={14} />
                   </button>
                 </div>
@@ -1014,24 +1111,35 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
                   </div>
                 </div>
                 <div className="px-3 py-1 bg-blue-500/20 border border-blue-500/40 rounded text-[10px] font-bold text-blue-100 font-mono tracking-widest italic">
-                  REF: TXN-{Math.floor(100000 + Math.random() * 900000)}
+                  REF: {txnId || 'PENDING'}
                 </div>
               </div>
 
               <div className="p-8 space-y-8">
                 {/* Header Info Review */}
-                <div className="grid grid-cols-4 gap-12 pb-8 border-b border-slate-100">
+                <div className="grid grid-cols-5 gap-12 pb-8 border-b border-slate-100">
                   <div className="flex flex-col gap-1">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Entry Type</span>
-                    <span className="text-xs font-black text-slate-700">JOURNAL TRANSFER (T/T)</span>
+                    <span className="text-xs font-black text-slate-700">{entryType}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Transaction ID</span>
+                    <span className="text-xs font-black text-blue-600 font-mono tracking-wider">{txnId || 'N/A'}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ref / Posting Date</span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-black text-slate-700">{refNo || 'NO REF'}</span>
+                      <span className="text-[8px] font-bold text-slate-400 font-mono italic">{formatDate(postingDate)}</span>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Value Date</span>
                     <span className="text-xs font-black text-slate-700 font-mono">{formatDate(txnDate)}</span>
                   </div>
-                  <div className="flex flex-col gap-1 col-span-2">
+                  <div className="flex flex-col gap-1">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Narration</span>
-                    <span className="text-xs font-medium text-slate-500 italic">Generic automated posting of ledger transfer.</span>
+                    <span className="text-xs font-medium text-slate-500 italic truncate max-w-[200px]">Generic automated posting of ledger transfer.</span>
                   </div>
                 </div>
 
@@ -1137,10 +1245,35 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
                   Modify Entry
                 </button>
                 <button 
-                  onClick={() => {
-                    handleUpdateBatchTotal(totalDebit);
-                    setUserDailyUtilization(curr => curr + totalDebit);
-                    setPostingStep('SUCCESS');
+                  onClick={async () => {
+                    try {
+                      const newTxn = await createTransaction({
+                        batchId: activeBatchId,
+                        type: entryType,
+                        date: txnDate,
+                        origin: 'TELLER',
+                        legs: legs.map(l => ({
+                          id: l.id,
+                          accountNo: l.accountNo,
+                          type: l.type,
+                          amount: l.amount,
+                          currency: l.currency,
+                          cashCurrency: l.cashCurrency,
+                          cashAmount: l.cashAmount,
+                          exchangeRate: l.exchangeRate,
+                          particulars: l.particulars,
+                          instrumentNo: l.instrumentNo
+                        }))
+                      });
+                      handleUpdateBatchTotal(totalDebit);
+                      setUserDailyUtilization(curr => curr + totalDebit);
+                      setPostingStep('SUCCESS');
+                      setLastPostedTxnId(newTxn.id);
+                      setApiTransactions(prev => [newTxn, ...prev]);
+                    } catch (err) {
+                      console.error('Error creating transaction:', err);
+                      alert('Failed to post transaction to terminal node.');
+                    }
                   }}
                   className="px-10 py-3 bg-blue-600 shadow-xl shadow-blue-600/20 text-white text-[10px] font-black rounded hover:bg-blue-700 transition-all active:scale-95 uppercase tracking-widest flex items-center gap-2.5"
                 >
@@ -1170,7 +1303,7 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
             <div className="flex gap-4 p-4 bg-slate-50 rounded border border-slate-100 mb-8 font-mono">
                <div className="flex flex-col px-4 border-r border-slate-200">
                   <span className="text-[8px] text-slate-400 font-bold uppercase mb-1">Tran ID</span>
-                  <span className="text-sm font-black text-blue-600">60129982</span>
+                  <span className="text-sm font-black text-blue-600">{lastPostedTxnId || '60129982'}</span>
                </div>
                <div className="flex flex-col px-4">
                   <span className="text-[8px] text-slate-400 font-bold uppercase mb-1">Value Date</span>
@@ -1245,22 +1378,34 @@ export default function TransactionPosting({ defaultType, mode }: TransactionPos
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { date: '24-MAY-2024', batch: activeBatch.id, ref: 'TX-9021-001', valueDate: '24-MAY-2024', amount: '45,000.00', user: 'JD_001', status: 'PENDING VERIFY' },
-                  { date: '24-MAY-2024', batch: activeBatch.id, ref: 'TX-9021-002', valueDate: '24-MAY-2024', amount: '12,045.50', user: 'JD_001', status: 'IN PROGRESS' },
-                  { date: '24-MAY-2024', batch: activeBatch.id, ref: 'TX-9500-112', valueDate: '24-MAY-2024', amount: '124,100.00', user: 'JD_001', status: 'FAILED' },
-                ].map((item, i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors group cursor-pointer border-b border-slate-100">
-                    <td className="font-mono text-slate-500">{item.date}</td>
-                    <td>
-                      <span className="text-[10px] font-black text-blue-900 bg-blue-50 px-1.5 py-0.5 border border-blue-200 rounded-[1px]">{item.batch}</span>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-12 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                      Fetching terminal data...
                     </td>
-                    <td className="font-mono text-blue-600 font-bold">{item.ref}</td>
-                    <td className="font-mono text-slate-500 tracking-tighter italic">{item.valueDate}</td>
-                    <td className="text-right font-mono font-bold text-slate-900 pr-6">{item.amount}</td>
-                    <td className="font-bold text-slate-400 text-[10px] tracking-widest">{item.user}</td>
+                  </tr>
+                ) : apiTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-12 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                      No transactions found for current SOL.
+                    </td>
+                  </tr>
+                ) : apiTransactions.map((item, i) => (
+                  <tr key={item.id} className="hover:bg-slate-50 transition-colors group cursor-pointer border-b border-slate-100">
+                    <td className="font-mono text-slate-500">{formatDate(item.date)}</td>
                     <td>
-                      <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-600 text-[8px] font-black tracking-widest border border-amber-200 shadow-sm">
+                      <span className="text-[10px] font-black text-blue-900 bg-blue-50 px-1.5 py-0.5 border border-blue-200 rounded-[1px]">{item.batchId}</span>
+                    </td>
+                    <td className="font-mono text-blue-600 font-bold">{item.id}</td>
+                    <td className="font-mono text-slate-500 tracking-tighter italic">{formatDate(item.date)}</td>
+                    <td className="text-right font-mono font-bold text-slate-900 pr-6">
+                      {item.legs.filter(l => l.type === 'DEBIT').reduce((acc, l) => acc + parseFloat(l.amount), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="font-bold text-slate-400 text-[10px] tracking-widest">SYSTEM</td>
+                    <td>
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black tracking-widest border shadow-sm ${
+                        item.status === 'POSTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'
+                      }`}>
                         {item.status}
                       </span>
                     </td>

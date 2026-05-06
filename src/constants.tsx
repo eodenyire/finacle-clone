@@ -11,6 +11,8 @@ import {
   ArrowUpRight,
   Globe,
   TrendingDown,
+  Banknote,
+  Repeat,
   Search,
   ChevronDown,
   LayoutDashboard,
@@ -185,6 +187,53 @@ export const MENU_DATA: MenuItem[] = [
       { id: 'od-verification', label: 'Account Verification', shortcut: 'HOAACVOD' },
       { id: 'od-modification', label: 'Account Modification', shortcut: 'HACM' },
       { id: 'od-limit-maint', label: 'Sanction Limit Maint', shortcut: 'HACLHM' }
+    ]
+  },
+  {
+    id: 'transaction-services',
+    label: 'Transaction Services',
+    icon: <Banknote size={18} />,
+    children: [
+      { id: 'txn-cash-dep', label: 'Cash Deposit', shortcut: 'HCASHDEP' },
+      { id: 'txn-cash-wd', label: 'Cash Withdrawal', shortcut: 'HCASHWD' },
+      { id: 'txn-transfer', label: 'Transfer Transaction', shortcut: 'HXFER' },
+      { id: 'txn-maintenance', label: 'Transaction Maintenance', shortcut: 'HTM' },
+      { id: 'txn-reversal', label: 'Transaction Reversal', shortcut: 'HCRT' },
+      { id: 'txn-inquiry', label: 'Transaction Inquiry', shortcut: 'HTI' },
+      { id: 'txn-find-inquiry', label: 'Financial Txn Inquiry', shortcut: 'HFTI' },
+      { id: 'txn-report', label: 'Transaction Report', shortcut: 'HFTR' },
+      { id: 'txn-id-report', label: 'Transaction ID Report', shortcut: 'GTID' }
+    ]
+  },
+  {
+    id: 'loan-mgt',
+    label: 'Loan Asset Management',
+    icon: <BarChart3 size={18} />,
+    children: [
+      { id: 'loan-opening', label: 'Loan Account Opening', shortcut: 'HOAACLA' },
+      { id: 'loan-modification', label: 'Loan Account Modification', shortcut: 'HOAACMLA' },
+      { id: 'loan-verification', label: 'Loan Account Verification', shortcut: 'HOAACVLA' },
+      { id: 'loan-disbursement', label: 'Loan Disbursement', shortcut: 'HLADISB' },
+      { id: 'loan-demand-gen', label: 'Loan Demand Generation', shortcut: 'HLADGEN' },
+      { id: 'loan-scheduled-pay', label: 'Scheduled Payment', shortcut: 'HLASPAY' },
+      { id: 'loan-demand-satisfaction', label: 'Demand Satisfaction Process', shortcut: 'HLADSP' },
+      { id: 'loan-unscheduled-pay', label: 'Unscheduled Payment', shortcut: 'HLAUPAY' },
+      { id: 'loan-reschedule', label: 'Loan Rescheduling / Amendment', shortcut: 'HLARA' },
+      { id: 'loan-int-maint', label: 'Interest Table Maintenance', shortcut: 'HLINTTM' },
+      { id: 'loan-fee-maint', label: 'Collect/Refund Loan Fee', shortcut: 'HLAFACR' },
+      { id: 'loan-fee-waive', label: 'Waive Loan Fee', shortcut: 'HLAWFEE' },
+      { id: 'loan-payoff-inq', label: 'Loan Payoff Inquiry', shortcut: 'HPAYOFF' },
+      { id: 'loan-txn-inq', label: 'Transaction Inquiry', shortcut: 'HACLI' },
+      { id: 'loan-ledger-inq', label: 'Account Ledger Inquiry', shortcut: 'HLACLI' },
+      { id: 'loan-fee-inq', label: 'Loan Fee Inquiry', shortcut: 'HLFEEI' },
+      { id: 'loan-pay-history', label: 'Payment History Inquiry', shortcut: 'HLPAYH' },
+      { id: 'loan-prepay-history', label: 'Pre-payment History', shortcut: 'HLPREPH' },
+      { id: 'loan-sched-inq', label: 'Repayment Schedule Inquiry', shortcut: 'HLRPSI' },
+      { id: 'loan-doc-report', label: 'Loan Document Report', shortcut: 'HDOCTR' },
+      { id: 'loan-gen-inq', label: 'Account General Inquiry', shortcut: 'HLAGI' },
+      { id: 'loan-gen-detail-inq', label: 'General Details Inquiry', shortcut: 'HLNGI' },
+      { id: 'loan-charges-inq', label: 'Loan Charges Inquiry', shortcut: 'HCCI' },
+      { id: 'loan-statement', label: 'Generate & Print Statement', shortcut: 'HLAPSP' }
     ]
   },
   {

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchRateCodes, updateRateCode, RateCode } from '../../services/api';
 import { 
   TrendingUp, 
   HelpCircle, 
@@ -26,6 +27,64 @@ interface RateMaintenanceProps {
 export default function RateMaintenance({ mode }: RateMaintenanceProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSubMode, setSelectedSubMode] = useState<'MAINTAIN' | 'ADD' | 'INQUIRE' | 'VERIFY' | 'DELETE'>('MAINTAIN');
+  const [rateCodeData, setRateCodeData] = useState({
+    code: '',
+    description: '',
+    fixedCurr: 'USD',
+    varCurr: '',
+    buySpread: '0.0000',
+    sellSpread: '0.0000',
+    midSpread: '0.0000',
+    spreadVerification: '0.0000',
+    authLevel: 'LEVEL 1 - MAKER'
+  });
+
+  const [rateCodes, setRateCodes] = useState<RateCode[]>([]);
+
+  useEffect(() => {
+    const loadRates = async () => {
+      try {
+        setIsProcessing(true);
+        const data = await fetchRateCodes();
+        setRateCodes(data);
+      } catch (err) {
+        console.error('Error fetching rate codes:', err);
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    loadRates();
+  }, []);
+
+  const handleSave = async () => {
+    if (!rateCodeData.code) {
+      alert('No rate code selected for update.');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const updated = await updateRateCode(rateCodeData.code, {
+        desc: rateCodeData.description,
+        fixed: rateCodeData.fixedCurr,
+        var: rateCodeData.varCurr,
+        buy: rateCodeData.buySpread,
+        sell: rateCodeData.sellSpread,
+        mid: rateCodeData.midSpread,
+        verify: rateCodeData.spreadVerification
+      });
+
+      // Update local state
+      setRateCodes(prev => prev.map(rc => rc.code === updated.code ? updated : rc));
+      alert('Configuration committed successfully to terminal node.');
+    } catch (err) {
+      console.error('Error updating rate code:', err);
+      alert('Failed to update rate configuration.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const getTitle = () => {
     switch (mode) {
@@ -76,15 +135,19 @@ export default function RateMaintenance({ mode }: RateMaintenanceProps) {
               <span>Primary Lookup Parameters</span>
               <Settings2 size={14} />
            </div>
-           <div className="p-8 lg:p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="p-8 lg:p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="space-y-2 lg:col-span-1">
                  <label className="text-[9px] font-black text-slate-400 block ml-1">Selection Function</label>
-                 <select className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-xs font-black text-slate-700 outline-none focus:border-blue-500">
-                    <option>M - MAINTAIN</option>
-                    <option>A - ADD RATE</option>
-                    <option>I - INQUIRE</option>
-                    <option>V - VERIFY</option>
-                    <option>D - DELETE</option>
+                 <select 
+                   value={selectedSubMode}
+                   onChange={(e) => setSelectedSubMode(e.target.value as any)}
+                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-xs font-black text-slate-700 outline-none focus:border-blue-500"
+                 >
+                    <option value="MAINTAIN">M - MAINTAIN</option>
+                    <option value="ADD">A - ADD RATE</option>
+                    <option value="INQUIRE">I - INQUIRE</option>
+                    <option value="VERIFY">V - VERIFY</option>
+                    <option value="DELETE">D - DELETE</option>
                  </select>
               </div>
 
@@ -95,10 +158,15 @@ export default function RateMaintenance({ mode }: RateMaintenanceProps) {
                  <div className="flex gap-2">
                     <input 
                       type="text" 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="e.g. USD / BASE_RATE" 
                       className="flex-1 bg-white border-2 border-slate-100 rounded-2xl px-6 py-4 text-xs font-black text-slate-700 outline-none focus:border-blue-500 font-mono shadow-inner uppercase" 
                     />
-                    <button className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-all">
+                    <button 
+                      onClick={handleInquiry}
+                      className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
+                    >
                        <Search size={20} />
                     </button>
                  </div>
@@ -122,20 +190,84 @@ export default function RateMaintenance({ mode }: RateMaintenanceProps) {
               <ShieldCheck size={16} /> Asset Configuration Schema
            </h2>
 
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {mode === 'RATE_CODE' && (
                 <>
                   <div className="space-y-2">
                      <label className="text-[9px] font-black text-slate-400 block ml-1">Rate Description</label>
-                     <input type="text" className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500" />
+                     <input 
+                        type="text" 
+                        value={rateCodeData.description}
+                        onChange={(e) => setRateCodeData({...rateCodeData, description: e.target.value})}
+                        className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500" 
+                        disabled={selectedSubMode === 'INQUIRE' || selectedSubMode === 'VERIFY'}
+                     />
                   </div>
                   <div className="space-y-2">
                      <label className="text-[9px] font-black text-slate-400 block ml-1">Fixed Currency</label>
-                     <input type="text" placeholder="USD" className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500" />
+                     <input 
+                        type="text" 
+                        placeholder="USD" 
+                        value={rateCodeData.fixedCurr}
+                        onChange={(e) => setRateCodeData({...rateCodeData, fixedCurr: e.target.value})}
+                        className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500" 
+                        disabled={selectedSubMode === 'INQUIRE' || selectedSubMode === 'VERIFY'}
+                     />
                   </div>
                   <div className="space-y-2">
                      <label className="text-[9px] font-black text-slate-400 block ml-1">Variable Currency</label>
-                     <input type="text" placeholder="INR" className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500" />
+                     <input 
+                        type="text" 
+                        placeholder="INR" 
+                        value={rateCodeData.varCurr}
+                        onChange={(e) => setRateCodeData({...rateCodeData, varCurr: e.target.value})}
+                        className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500" 
+                        disabled={selectedSubMode === 'INQUIRE' || selectedSubMode === 'VERIFY'}
+                     />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[9px] font-black text-slate-400 block ml-1">Buy Spread</label>
+                     <input 
+                        type="text" 
+                        placeholder="0.0000" 
+                        value={rateCodeData.buySpread}
+                        onChange={(e) => setRateCodeData({...rateCodeData, buySpread: e.target.value})}
+                        className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500 font-mono" 
+                        disabled={selectedSubMode === 'INQUIRE' || selectedSubMode === 'VERIFY'}
+                     />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[9px] font-black text-slate-400 block ml-1">Sell Spread</label>
+                     <input 
+                        type="text" 
+                        placeholder="0.0000" 
+                        value={rateCodeData.sellSpread}
+                        onChange={(e) => setRateCodeData({...rateCodeData, sellSpread: e.target.value})}
+                        className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500 font-mono" 
+                        disabled={selectedSubMode === 'INQUIRE' || selectedSubMode === 'VERIFY'}
+                     />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[9px] font-black text-slate-400 block ml-1">Mid Spread</label>
+                     <input 
+                        type="text" 
+                        placeholder="0.0000" 
+                        value={rateCodeData.midSpread}
+                        onChange={(e) => setRateCodeData({...rateCodeData, midSpread: e.target.value})}
+                        className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500 font-mono" 
+                        disabled={selectedSubMode === 'INQUIRE' || selectedSubMode === 'VERIFY'}
+                     />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[9px] font-black text-slate-400 block ml-1">Spread Verification</label>
+                     <input 
+                        type="text" 
+                        placeholder="0.0000" 
+                        value={rateCodeData.spreadVerification}
+                        onChange={(e) => setRateCodeData({...rateCodeData, spreadVerification: e.target.value})}
+                        className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500 font-mono" 
+                        disabled={selectedSubMode === 'INQUIRE' || selectedSubMode === 'VERIFY'} 
+                     />
                   </div>
                 </>
               )}
@@ -168,12 +300,13 @@ export default function RateMaintenance({ mode }: RateMaintenanceProps) {
 
               {/* Shared Fields */}
               <div className="space-y-2">
-                 <label className="text-[9px] font-black text-slate-400 block ml-1">Spread Verification</label>
-                 <input type="text" placeholder="0.0000" className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500 font-mono" />
-              </div>
-              <div className="space-y-2">
                  <label className="text-[9px] font-black text-slate-400 block ml-1">Auth Level Required</label>
-                 <select className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500 bg-transparent">
+                 <select 
+                   value={rateCodeData.authLevel}
+                   onChange={(e) => setRateCodeData({...rateCodeData, authLevel: e.target.value})}
+                   className="w-full border-b-2 border-slate-100 py-2 text-xs font-black text-slate-700 outline-none focus:border-blue-500 bg-transparent"
+                   disabled={selectedSubMode === 'INQUIRE' || selectedSubMode === 'VERIFY'}
+                 >
                     <option>LEVEL 1 - MAKER</option>
                     <option>LEVEL 2 - CHECKER</option>
                     <option>LEVEL 3 - SUPV</option>
@@ -181,10 +314,64 @@ export default function RateMaintenance({ mode }: RateMaintenanceProps) {
               </div>
            </div>
 
+           {mode === 'RATE_CODE' && selectedSubMode === 'INQUIRE' && (
+              <div className="mt-12 overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest italic">
+                      <th className="px-6 py-4">Code</th>
+                      <th className="px-6 py-4">Description</th>
+                      <th className="px-6 py-4">Fixed/Var</th>
+                      <th className="px-6 py-4">Buy Spread</th>
+                      <th className="px-6 py-4">Sell Spread</th>
+                      <th className="px-6 py-4">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {rateCodes.map((r, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors group">
+                        <td className="px-6 py-4 text-[10px] font-black text-slate-700 font-mono">{r.code}</td>
+                        <td className="px-6 py-4 text-[10px] font-bold text-slate-500">{r.desc}</td>
+                        <td className="px-6 py-4 text-[10px] font-black text-blue-600">{r.fixed}/{r.var}</td>
+                        <td className="px-6 py-4 text-[10px] font-black text-emerald-600 font-mono">{r.buy}</td>
+                        <td className="px-6 py-4 text-[10px] font-black text-rose-600 font-mono">{r.sell}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={() => {
+                              setRateCodeData({
+                                code: r.code,
+                                description: r.desc,
+                                fixedCurr: r.fixed,
+                                varCurr: r.var,
+                                buySpread: r.buy,
+                                sellSpread: r.sell,
+                                midSpread: r.mid,
+                                spreadVerification: r.verify || '0.0000',
+                                authLevel: 'LEVEL 1 - MAKER'
+                              });
+                              setSelectedSubMode('MAINTAIN');
+                            }}
+                            className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-widest"
+                          >
+                            Modify
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
            <div className="mt-12 pt-8 border-t border-slate-50 flex justify-end gap-4">
               <button className="px-8 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black text-slate-400 tracking-widest hover:bg-slate-50 transition-all">Discard Changes</button>
-              <button className="px-12 py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] tracking-[0.2em] shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center gap-3">
-                 <Save size={16} /> Commit Configuration
+              <button 
+                onClick={handleSave}
+                disabled={isProcessing}
+                className="px-12 py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] tracking-[0.2em] shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center gap-3 disabled:opacity-50"
+              >
+                 {isProcessing ? <RefreshCcw size={16} className="animate-spin" /> : <Save size={16} />} 
+                 {selectedSubMode === 'VERIFY' ? 'Approve Configuration' : 'Commit Configuration'}
               </button>
            </div>
         </div>

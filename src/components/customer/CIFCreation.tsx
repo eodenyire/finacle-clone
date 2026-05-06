@@ -15,19 +15,16 @@ import {
   ShieldCheck,
   AlertCircle
 } from 'lucide-react';
-import { useBanking } from '@/src/context/BankingContext';
 
 interface CIFCreationProps {
   initialType?: 'RETAIL' | 'CORPORATE';
 }
 
 export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps) {
-  const { createCustomer } = useBanking();
   const [cifType, setCifType] = useState<'RETAIL' | 'CORPORATE'>(initialType);
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const [createdCifId, setCreatedCifId] = useState('');
 
   const [formData, setFormData] = useState({
     // Retail Fields
@@ -71,34 +68,10 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
 
   const submitForm = () => {
     setIsSubmitting(true);
-    try {
-      const customer = createCustomer({
-        type: cifType,
-        title: formData.title,
-        firstName: formData.firstName.toUpperCase() || undefined,
-        middleName: formData.middleName.toUpperCase() || undefined,
-        lastName: formData.lastName.toUpperCase() || undefined,
-        gender: formData.gender,
-        dob: formData.dob,
-        nationality: formData.nationality,
-        idType: formData.idType,
-        idNumber: formData.idNumber,
-        entityName: formData.entityName.toUpperCase() || undefined,
-        registrationNo: formData.registrationNo,
-        constitutionType: formData.constitutionType,
-        industry: formData.industry,
-        dateOfInc: formData.dateOfInc,
-        mobile: formData.mobile,
-        email: formData.email,
-        address: formData.address,
-        city: formData.city,
-      });
-      setCreatedCifId(customer.cifId);
+    setTimeout(() => {
       setIsSubmitting(false);
       setIsComplete(true);
-    } catch {
-      setIsSubmitting(false);
-    }
+    }, 2000);
   };
 
   const renderProgress = () => (
@@ -136,38 +109,26 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
       <div className="space-y-4">
         <label className="block">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-50 rounded inline-block">Full Legal Title</span>
-          <select value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-            <option value="Mr">Mr.</option>
-            <option value="Ms">Ms.</option>
-            <option value="Dr">Dr.</option>
-            <option value="Prof">Prof.</option>
+          <select className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            <option>Mr.</option>
+            <option>Ms.</option>
+            <option>Dr.</option>
+            <option>Prof.</option>
           </select>
         </label>
         <label className="block">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-50 rounded inline-block">First Name *</span>
-          <input type="text" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} placeholder="Enter first name" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-        </label>
-        <label className="block">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-50 rounded inline-block">Middle Name</span>
-          <input type="text" value={formData.middleName} onChange={(e) => setFormData({...formData, middleName: e.target.value})} placeholder="Middle name (optional)" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+          <input type="text" placeholder="Enter first name" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
         </label>
       </div>
       <div className="space-y-4">
         <label className="block">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-50 rounded inline-block">Last Name *</span>
-          <input type="text" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} placeholder="Enter last name" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+          <input type="text" placeholder="Enter last name" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
         </label>
         <label className="block">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-50 rounded inline-block">Date of Birth *</span>
-          <input type="date" value={formData.dob} onChange={(e) => setFormData({...formData, dob: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-        </label>
-        <label className="block">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-50 rounded inline-block">Gender</span>
-          <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
+          <input type="date" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
         </label>
       </div>
     </div>
@@ -178,22 +139,18 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
       <div className="space-y-4">
         <label className="block">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Primary Document Type</span>
-          <select value={formData.idType} onChange={(e) => setFormData({...formData, idType: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-            <option value="PASSPORT">PASSPORT</option>
-            <option value="GOVT ISSUED ID">GOVT ISSUED ID (ADHAAR)</option>
-            <option value="PAN CARD">PAN CARD</option>
-            <option value="VOTER ID">VOTER ID</option>
+          <select className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            <option>PASSPORT</option>
+            <option>GOVT ISSUED ID (ADHAAR)</option>
+            <option>PAN CARD</option>
+            <option>VOTER ID</option>
           </select>
-        </label>
-        <label className="block">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Nationality</span>
-          <input type="text" value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} placeholder="e.g. Indian" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
         </label>
       </div>
       <div className="space-y-4">
         <label className="block">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Document Number *</span>
-          <input type="text" value={formData.idNumber} onChange={(e) => setFormData({...formData, idNumber: e.target.value})} placeholder="ID Number / Reference" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold font-mono text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+          <input type="text" placeholder="ID Number / Reference" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold font-mono text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
         </label>
       </div>
       <div className="md:col-span-2 p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-4">
@@ -208,16 +165,12 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
       <div className="space-y-4">
         <label className="block">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Entity Name (Full Legal) *</span>
-          <input type="text" value={formData.entityName} onChange={(e) => setFormData({...formData, entityName: e.target.value})} placeholder="Registered Name of the Company" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-        </label>
-        <label className="block">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Registration Number</span>
-          <input type="text" value={formData.registrationNo} onChange={(e) => setFormData({...formData, registrationNo: e.target.value})} placeholder="e.g. REG-0012345" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold font-mono text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+          <input type="text" placeholder="Registered Name of the Company" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
         </label>
         <div className="grid grid-cols-2 gap-4">
           <label className="block">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Constitution Type</span>
-            <select value={formData.constitutionType} onChange={(e) => setFormData({...formData, constitutionType: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            <select className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
               <option>Private Limited</option>
               <option>Public Limited</option>
               <option>Partnership</option>
@@ -227,7 +180,7 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
           </label>
           <label className="block">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Date of Incorporation</span>
-            <input type="date" value={formData.dateOfInc} onChange={(e) => setFormData({...formData, dateOfInc: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+            <input type="date" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
           </label>
         </div>
       </div>
@@ -247,7 +200,7 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
         <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8 w-full max-w-sm">
            <div className="flex justify-between items-center mb-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">New CIF Identity</span>
-              <span className="text-lg font-black text-blue-600 font-mono">{createdCifId}</span>
+              <span className="text-lg font-black text-blue-600 font-mono">CIF-10099238</span>
            </div>
            <div className="flex justify-between items-center">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Assigned RM</span>
@@ -343,21 +296,16 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
                       <div className="space-y-4">
                         <label className="block">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Mobile Number *</span>
-                          <input type="text" value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} placeholder="+91 99000 00000" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold font-mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-                        </label>
-                        <label className="block">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">City</span>
-                          <input type="text" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} placeholder="City of residence" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                          <div className="flex">
+                            <span className="bg-slate-50 border border-slate-200 border-r-0 rounded-l-lg px-4 py-2.5 text-xs font-bold text-slate-500 flex items-center">+91</span>
+                            <input type="text" className="w-full bg-white border border-slate-200 rounded-r-lg px-4 py-2.5 text-sm font-bold font-mono text-slate-700 outline-none" />
+                          </div>
                         </label>
                       </div>
                       <div className="space-y-4">
                         <label className="block">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Email Address</span>
-                          <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="customer@domain.com" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-                        </label>
-                        <label className="block">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Address</span>
-                          <textarea value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} placeholder="Full residential address" rows={2} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none" />
+                          <input type="email" placeholder="customer@domain.com" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-700 outline-none" />
                         </label>
                       </div>
                     </div>
@@ -368,10 +316,10 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Summary Verification</h4>
                          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                             {[
-                               { l: 'Full Name', v: [formData.firstName, formData.middleName, formData.lastName].filter(Boolean).join(' ').toUpperCase() || '—' },
-                               { l: 'Identity', v: formData.idNumber || '—' },
-                               { l: 'Mobile', v: formData.mobile || '—' },
-                               { l: 'Nationality', v: formData.nationality || '—' },
+                               { l: 'Full Name', v: 'Johnathon Q. Sample' },
+                               { l: 'Identity', v: 'PASS-990827-X' },
+                               { l: 'Mobile', v: '+91 9882200112' },
+                               { l: 'Nationality', v: 'Indian' },
                                { l: 'KYC Status', v: 'PENDING' },
                             ].map((item, i) => (
                               <div key={i}>
@@ -397,11 +345,7 @@ export default function CIFCreation({ initialType = 'RETAIL' }: CIFCreationProps
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
                        <label className="block col-span-2">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Registered Tax ID (PAN/VAT) *</span>
-                          <input type="text" value={formData.registrationNo} onChange={(e) => setFormData({...formData, registrationNo: e.target.value})} placeholder="e.g. IT-VAT-1234567" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold font-mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-                        </label>
-                        <label className="block col-span-2">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-slate-100 rounded inline-block">Mobile / Contact Number</span>
-                          <input type="text" value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} placeholder="+1 (555) 000-0000" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold font-mono text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                          <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-bold font-mono text-slate-700 outline-none" />
                         </label>
                         <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 col-span-2">
                            <p className="text-[10px] text-emerald-800 font-bold italic">
